@@ -1,0 +1,72 @@
+configfile: "config.yml"
+SAMPLES = config["samples"]
+
+
+rule all:
+    input:
+        expand("filtered_contigs/best_hit/Megahit_assembled/{sample}.txt" , sample=SAMPLES),
+
+rule SRR_download:
+    output:
+         "data/{sample}_1.fastq.gz",
+         "data/{sample}_2.fastq.gz",
+    threads: 1
+    run:
+       shell("python SRR_Fasterq_dump.py {wildcards.sample}"),
+       shell("rm /scratch/rh35/hg9845/Meta_assembly/sra/sra/{wildcards.sample}.sra")
+
+rule assembly_megahit:
+    input:
+         R1 = "data/{sample}_1.fastq.gz",
+         R2 = "data/{sample}_2.fastq.gz",
+    output:
+        directory("Megahit_assembly/{sample}"),
+    threads: 8
+    run:
+        shell("megahit -1 {input.R1} -2 {input.R2} -t {threads} -o {output}"),
+        shell("rm {input.R1} {input.R2}")
+
+
+rule copy_megahit:
+    input:
+         R1 = "Megahit_assembly/{sample}",
+    output:
+         "Megahit_assembled/{sample}_contigs.fa",
+    threads: 1
+    run:
+        shell("cp {input.R1}/final.contigs.fa {output}"),
+        shell("rm -r {input.R1}")
+
+rule ref_blast_megahit:
+    input:
+         R1 = "Megahit_assembled/{sample}_contigs.fa",
+    output:
+         temp("filtered_contigs/unsorted/Megahit_assembled/{sample}.txt"),
+    threads: 2
+    run:
+        shell("blastn -db DWV.fna -query {input.R1}  -out {output} -num_threads {threads} -outfmt \"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore\" ")
+
+rule sort_blast:
+    input:
+         R1 = "filtered_contigs/unsorted/Megahit_assembled/{sample}.txt",
+    output:
+         "filtered_contigs/sorted/Megahit_assembled/{sample}.txt",
+    threads: 1
+    run:
+       shell("sort -k11,11g -k12,12gr -k4,4gr {input} | sort -u -k1,1 --merge > {output}")
+
+
+rule blast_best_hit_Megahit:
+    input:
+         R1 = "filtered_contigs/sorted/Megahit_assembled/{sample}.txt",
+         R2 = "Megahit_assembled/{sample}_contigs.fa",
+    output:
+         "filtered_contigs/best_hit/Megahit_assembled/{sample}.txt",
+    threads: 1
+    run:
+       shell("./script.sh {input.R1} {input.R2} {output}")
+
+
+
+
+

@@ -1,0 +1,18 @@
+__default__:
+  mem: 20G
+  queue: normal
+  time: '01:00:00'
+  jobfs: 20G
+  project: rh35
+  name: "SNK_{rule}"
+
+align_reads:
+  queue: normal
+  time: '01:00:00'
+  mem: 100G
+
+contig_coverage:
+  queue: normal
+  time: '00:30:00'
+  mem: 20G
+

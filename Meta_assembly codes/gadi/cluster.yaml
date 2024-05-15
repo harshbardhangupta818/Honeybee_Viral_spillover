@@ -1,0 +1,26 @@
+__default__:
+  mem: 20G
+  queue: normalsl
+  time: '02:00:00'
+  jobfs: 200G
+  project: rh35
+  name: "SNK_{rule}"
+
+assembly_megahit:
+  queue: normalsl
+  time: '10:00:00'
+  mem: 60G
+
+copy_megahit:
+  time: '02:00:00'
+  mem : 20G
+  queue: copyq
+  ncpus: 1
+  jobfs: 200G
+
+SRR_download:
+  time: '06:00:00'
+  mem : 40G
+  queue: copyq
+  ncpus: 1
+  jobfs: 200G
